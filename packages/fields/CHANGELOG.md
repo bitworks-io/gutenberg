@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Internal
+
+-   `MediaEdit` and its `MediaEditProps` type moved to `@wordpress/media-utils`, which this package re-exports them from. Both exports and their behavior are unchanged.
+
 ### Bug Fixes
 
 -   `trashPost`, `permanentlyDeletePost`: Offer "Permanently delete" instead of "Trash" for posts without the `wp:action-trash` REST link. Requires WordPress 7.2 or the Gutenberg plugin ([#84045](https://github.com/WordPress/gutenberg/pull/84045)).
