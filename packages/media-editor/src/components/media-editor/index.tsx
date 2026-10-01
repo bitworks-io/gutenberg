@@ -37,7 +37,7 @@ import {
 	isKeyboardEvent,
 } from '@wordpress/keycodes';
 import { SnackbarNotices, store as noticesStore } from '@wordpress/notices';
-import type { Field } from '@wordpress/dataviews';
+import type { Field, Form } from '@wordpress/dataviews';
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import { MediaEditorProvider } from '../media-editor-provider';
 import type { Media } from '../media-editor-provider';
@@ -112,6 +112,7 @@ export interface MediaEditorFrameProps {
 
 export interface MediaEditorProps {
 	fields?: Field< Media >[];
+	form?: Form;
 	id: number;
 	aspectRatioPresets?: AspectRatioPreset[];
 	onClose?: () => void;
@@ -495,6 +496,7 @@ function SaveActions( { size = 'default' }: SaveActionsProps ) {
 
 function MediaEditorContent( {
 	fields = [],
+	form,
 	id,
 	aspectRatioPresets,
 	onClose,
@@ -884,6 +886,7 @@ function MediaEditorContent( {
 							isDisabled: true,
 						} ) )
 					: fields,
+				form,
 			} }
 		>
 			<div className="media-editor">
