@@ -12,14 +12,16 @@ The repository also contains internal workspaces under `tools/` and `test/` for 
 
 ## Supply chain policy
 
-npm v12 refuses git references (`EALLOWGIT`) and tarball URLs (`EALLOWREMOTE`) by default. `.npmrc` extends that to local tarball files (`EALLOWFILE`). Local directories stay at the npm default, because narrowing them also blocks `npm pack` on the repository's own workspaces.
+npm v12 refuses git references (`EALLOWGIT`) and tarball URLs (`EALLOWREMOTE`) by default. `.npmrc` extends that to local tarball files (`EALLOWFILE`). Local directories stay at the npm default, which gates nothing here: the `file:` links between workspaces resolve as workspaces rather than directory dependencies.
 
-Install scripts are opt-in: every dependency that ships one is recorded in `allowScripts` in the root `package.json`, and `strict-allow-scripts` fails the install with `ESTRICTALLOWSCRIPTS` on anything missing from that list. Most entries are `false` because the package works without its script; `leveldown` and `fs-ext` are approved because they are `node-gyp` builds with no usable prebuilt binary on every supported platform.
+Install scripts are opt-in: every dependency that ships one is recorded in `allowScripts` in the root `package.json`, and `strict-allow-scripts` fails the install with `ESTRICTALLOWSCRIPTS` on anything missing from that list. Every entry is `false`, so nothing compiles on install.
+
+`allowScripts` covers dependencies only. Workspace lifecycle scripts are skipped under `install-strategy=linked` with no error ([npm/cli#9982](https://github.com/npm/cli/issues/9982)), so a workspace that must run on install is invoked from the root `postinstall` instead, as `@wordpress/icons` is. For the same reason, do not run `npm install-scripts prune`: it reads the hoisted layout and deletes every entry as unused.
 
 When an install fails that way, read the script, then record the decision and commit the `package.json` change:
 
 ```bash
-npm install-scripts ls              # list what is not covered yet
+npm install-scripts ls              # list what is not covered yet (over-reports under linked)
 npm install-scripts deny <pkg>      # the package works without its install script
 npm install-scripts approve <pkg>   # the script is required; approval is pinned to the reviewed version
 ```
