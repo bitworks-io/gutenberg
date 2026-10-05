@@ -16,7 +16,7 @@ npm v12 refuses git references (`EALLOWGIT`) and tarball URLs (`EALLOWREMOTE`) b
 
 Install scripts are opt-in: every dependency that ships one is recorded in `allowScripts` in the root `package.json`, and `strict-allow-scripts` fails the install with `ESTRICTALLOWSCRIPTS` on anything missing from that list. Every entry is `false`, so nothing compiles on install.
 
-`allowScripts` covers dependencies only. Workspace lifecycle scripts are skipped under `install-strategy=linked` with no error ([npm/cli#9982](https://github.com/npm/cli/issues/9982)), so a workspace that must run on install is invoked from the root `postinstall` instead, as `@wordpress/icons` is. For the same reason, do not run `npm install-scripts prune`: it reads the hoisted layout and deletes every entry as unused.
+`allowScripts` covers dependencies only. Workspace lifecycle scripts are skipped under `install-strategy=linked` with no error ([npm/cli#9982](https://github.com/npm/cli/issues/9982)), so a workspace that must run on install is invoked from the root `postinstall` instead, as `@wordpress/icons` is. Until the next npm release ships [npm/cli#9941](https://github.com/npm/cli/pull/9941), do not run `npm install-scripts prune`: it reads the hoisted layout and deletes every entry as unused.
 
 When an install fails that way, read the script, then record the decision and commit the `package.json` change:
 
