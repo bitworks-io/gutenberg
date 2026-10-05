@@ -278,8 +278,9 @@ class Gutenberg_REST_Fields_Controller_7_2 extends WP_REST_Controller {
 					),
 				),
 				'type'               => array(
-					'description' => __( 'The type of the field.', 'gutenberg' ),
+					'description' => __( 'The type of the field, one of the types DataViews provides a control for.', 'gutenberg' ),
 					'type'        => 'string',
+					'enum'        => array( 'array', 'boolean', 'color', 'date', 'datetime', 'email', 'integer', 'media', 'number', 'password', 'telephone', 'text', 'time', 'url' ),
 				),
 				'label'              => array(
 					'description' => __( 'The label of the field.', 'gutenberg' ),

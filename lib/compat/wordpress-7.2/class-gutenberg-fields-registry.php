@@ -36,15 +36,6 @@
 final class Gutenberg_Fields_Registry {
 
 	/**
-	 * The field types DataViews provides a control for, see
-	 * `packages/dataviews/src/field-types`. A field without a `type` is
-	 * rendered as text, one with another `type` without a control.
-	 *
-	 * @var string[]
-	 */
-	const FIELD_TYPES = array( 'array', 'boolean', 'color', 'date', 'datetime', 'email', 'integer', 'media', 'number', 'password', 'telephone', 'text', 'time', 'url' );
-
-	/**
 	 * Registered fields, as kind => name => array of field id => definition.
 	 *
 	 * Kept nested rather than under a joined `{$kind}/{$name}` key: both parts
@@ -461,8 +452,9 @@ final class Gutenberg_Fields_Registry {
 	}
 
 	/**
-	 * Reports the fields whose `type` DataViews does not provide, with
-	 * _doing_it_wrong(). A misspelt type is otherwise silent: the field
+	 * Reports the fields whose `type` is not one the REST schema of the
+	 * fields lists, with _doing_it_wrong(). Those are the types DataViews
+	 * provides a control for: a misspelt type is otherwise silent, the field
 	 * renders without a control. A missing `type` is fine.
 	 *
 	 * @param string  $method The calling method, for the notice.
@@ -471,13 +463,15 @@ final class Gutenberg_Fields_Registry {
 	 * @param array[] $fields The field definitions.
 	 */
 	private function report_unknown_types( $method, $kind, $name, $fields ) {
-		$unknown = array();
+		$type_schema = ( new Gutenberg_REST_Fields_Controller_7_2() )->get_item_schema()['properties']['fields']['items']['properties']['type'];
+		$unknown     = array();
 		foreach ( $fields as $field ) {
 			if ( ! isset( $field['type'] ) ) {
 				continue;
 			}
-			if ( ! is_string( $field['type'] ) || ! in_array( $field['type'], self::FIELD_TYPES, true ) ) {
-				$unknown[] = sprintf( '%s (%s)', $field['id'], is_string( $field['type'] ) ? $field['type'] : gettype( $field['type'] ) );
+			$valid = rest_validate_value_from_schema( $field['type'], $type_schema, 'type' );
+			if ( is_wp_error( $valid ) ) {
+				$unknown[] = sprintf( '%s (%s)', $field['id'], $valid->get_error_message() );
 			}
 		}
 		if ( ! $unknown ) {
@@ -486,12 +480,11 @@ final class Gutenberg_Fields_Registry {
 		_doing_it_wrong(
 			$method,
 			sprintf(
-				/* translators: 1: Entity kind, e.g. postType. 2: Entity name, e.g. page. 3: Comma-separated list of field ids with their types. 4: Comma-separated list of field types. */
-				__( 'These fields of %1$s "%2$s" have a type DataViews does not provide, so they render without a control: %3$s. Leave the type out or use one of: %4$s.', 'gutenberg' ),
+				/* translators: 1: Entity kind, e.g. postType. 2: Entity name, e.g. page. 3: Comma-separated list of field ids, each with the error of its type. */
+				__( 'These fields of %1$s "%2$s" have a type DataViews does not provide, so they render without a control: %3$s', 'gutenberg' ),
 				$kind,
 				$name,
-				implode( ', ', $unknown ),
-				implode( ', ', self::FIELD_TYPES )
+				implode( ', ', $unknown )
 			),
 			'7.2.0'
 		);
