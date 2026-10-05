@@ -36,6 +36,15 @@
 final class Gutenberg_Fields_Registry {
 
 	/**
+	 * The field types DataViews provides a control for, see
+	 * `packages/dataviews/src/field-types`. A field without a `type` is
+	 * rendered as text, one with another `type` without a control.
+	 *
+	 * @var string[]
+	 */
+	const FIELD_TYPES = array( 'array', 'boolean', 'color', 'date', 'datetime', 'email', 'integer', 'media', 'number', 'password', 'telephone', 'text', 'time', 'url' );
+
+	/**
 	 * Registered fields, as kind => name => array of field id => definition.
 	 *
 	 * Kept nested rather than under a joined `{$kind}/{$name}` key: both parts
@@ -91,7 +100,8 @@ final class Gutenberg_Fields_Registry {
 	 * the call are registered: a field another plugin got to first does not
 	 * cost a plugin the others. To change a registered field, see update();
 	 * to replace it, unregister it first. The script module, if any, applies
-	 * to every field the call registers.
+	 * to every field the call registers. A field whose `type` DataViews does
+	 * not provide is reported and registered anyway.
 	 *
 	 * The origin is stored as the `origin` property of each field, as
 	 * `registeredBy`, replacing any `origin` the definition sets.
@@ -158,6 +168,7 @@ final class Gutenberg_Fields_Registry {
 		if ( ! $new_fields ) {
 			return array();
 		}
+		$this->report_unknown_types( __METHOD__, $kind, $name, $new_fields );
 
 		foreach ( $new_fields as $field ) {
 			$this->fields[ $kind ][ $name ][ $field['id'] ] = array_merge(
@@ -184,7 +195,8 @@ final class Gutenberg_Fields_Registry {
 	 * registered: a field that is not is reported and skipped, and the rest
 	 * of the fields of the call are updated. The script module, if any,
 	 * applies to every field the call updates, on top of the modules the
-	 * fields have.
+	 * fields have. A field whose `type` DataViews does not provide is
+	 * reported and updated anyway.
 	 *
 	 * The origin is appended to the `updatedBy` list of the `origin` property
 	 * of each field, once; the rest of the `origin` property cannot be
@@ -209,6 +221,7 @@ final class Gutenberg_Fields_Registry {
 		if ( ! $this->validate_arguments( __METHOD__, $origin, $kind, $name, $fields, $script_module ) ) {
 			return array();
 		}
+		$this->report_unknown_types( __METHOD__, $kind, $name, $fields );
 
 		$ids              = array();
 		$unregistered_ids = array();
@@ -445,6 +458,43 @@ final class Gutenberg_Fields_Registry {
 			'7.2.0'
 		);
 		return false;
+	}
+
+	/**
+	 * Reports the fields whose `type` DataViews does not provide, with
+	 * _doing_it_wrong(). A misspelt type is otherwise silent: the field
+	 * renders without a control. A missing `type` is fine.
+	 *
+	 * @param string  $method The calling method, for the notice.
+	 * @param string  $kind   The entity kind.
+	 * @param string  $name   The entity name.
+	 * @param array[] $fields The field definitions.
+	 */
+	private function report_unknown_types( $method, $kind, $name, $fields ) {
+		$unknown = array();
+		foreach ( $fields as $field ) {
+			if ( ! isset( $field['type'] ) ) {
+				continue;
+			}
+			if ( ! is_string( $field['type'] ) || ! in_array( $field['type'], self::FIELD_TYPES, true ) ) {
+				$unknown[] = sprintf( '%s (%s)', $field['id'], is_string( $field['type'] ) ? $field['type'] : gettype( $field['type'] ) );
+			}
+		}
+		if ( ! $unknown ) {
+			return;
+		}
+		_doing_it_wrong(
+			$method,
+			sprintf(
+				/* translators: 1: Entity kind, e.g. postType. 2: Entity name, e.g. page. 3: Comma-separated list of field ids with their types. 4: Comma-separated list of field types. */
+				__( 'These fields of %1$s "%2$s" have a type DataViews does not provide, so they render without a control: %3$s. Leave the type out or use one of: %4$s.', 'gutenberg' ),
+				$kind,
+				$name,
+				implode( ', ', $unknown ),
+				implode( ', ', self::FIELD_TYPES )
+			),
+			'7.2.0'
+		);
 	}
 
 	/**
