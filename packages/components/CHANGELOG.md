@@ -11,6 +11,7 @@
 
 ### Enhancements
 
+-   Add interaction backgrounds to `TabPanel` tabs and `Notice` dismiss buttons, and thicken `ExternalLink` underlines on hover, press, and keyboard focus. ([#82294](https://github.com/WordPress/gutenberg/pull/82294))
 -   `CheckboxControl`: Mark as not recommended for use in a WordPress environment, in favour of `CheckboxControl` from `@wordpress/ui` ([#83771](https://github.com/WordPress/gutenberg/pull/83771)).
 -   `RadioControl`: Mark as not recommended for use in a WordPress environment, in favour of `RadioGroupControl` from `@wordpress/ui` ([#83872](https://github.com/WordPress/gutenberg/pull/83872)).
 -   `RadioControl`: Match the `@wordpress/ui` Radio colors ([#83270](https://github.com/WordPress/gutenberg/pull/83270)).
