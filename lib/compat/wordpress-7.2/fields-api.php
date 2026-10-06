@@ -143,6 +143,7 @@ function _gutenberg_add_field_modules_to_editor_script( $scripts = null ) {
 		$scripts->add_data( 'wp-editor', 'module_dependencies', $dependencies );
 	}
 }
+remove_action( 'admin_footer', '_wp_add_field_modules_to_editor_script' );
 add_action( 'admin_footer', '_gutenberg_add_field_modules_to_editor_script' );
 
 /**

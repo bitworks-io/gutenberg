@@ -101,7 +101,7 @@ function gutenberg_register_fields_controller_endpoints() {
 	$fields_controller = new Gutenberg_REST_Fields_Controller_7_2();
 	$fields_controller->register_routes();
 }
-add_action( 'rest_api_init', 'gutenberg_register_fields_controller_endpoints' );
+add_action( 'rest_api_init', 'gutenberg_register_fields_controller_endpoints', PHP_INT_MAX );
 
 /**
  * Registers the Templates and Template Parts REST API routes.
