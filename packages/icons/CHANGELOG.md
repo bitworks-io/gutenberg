@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+-   `Icon` now renders at 20px by default (previously 24px) ([#84105](https://github.com/WordPress/gutenberg/pull/84105)).
+
 ### New Features
 
 -   Add the `justifySpaceAround` icon ([#83519](https://github.com/WordPress/gutenberg/pull/83519)).
