@@ -16,12 +16,15 @@ npm v12 refuses git references (`EALLOWGIT`) and tarball URLs (`EALLOWREMOTE`) b
 
 Install scripts are opt-in: every dependency that ships one is recorded in `allowScripts` in the root `package.json`, and `strict-allow-scripts` fails the install with `ESTRICTALLOWSCRIPTS` on anything missing from that list. Every entry is `false`, so nothing compiles on install.
 
-`allowScripts` covers dependencies only. Workspace lifecycle scripts are skipped under `install-strategy=linked` with no error ([npm/cli#9982](https://github.com/npm/cli/issues/9982)), so a workspace that must run on install is invoked from the root `postinstall` instead, as `@wordpress/icons` is. Until the next npm release ships [npm/cli#9941](https://github.com/npm/cli/pull/9941), do not run `npm install-scripts prune`: it reads the hoisted layout and deletes every entry as unused.
+`allowScripts` covers dependencies only. Workspace lifecycle scripts are skipped under `install-strategy=linked` with no error ([npm/cli#9982](https://github.com/npm/cli/issues/9982)), so a workspace that must run on install is invoked from the root `postinstall` instead, as `@wordpress/icons` is.
 
-When an install fails that way, read the script, then record the decision and commit the `package.json` change:
+When an install fails that way, read the script, then edit `allowScripts` by hand and commit the `package.json` change. Use the package name on its own to cover every version, or `name@version` to pin an approval to the version you reviewed:
 
-```bash
-npm install-scripts ls              # list what is not covered yet (over-reports under linked)
-npm install-scripts deny <pkg>      # the package works without its install script
-npm install-scripts approve <pkg>   # the script is required; approval is pinned to the reviewed version
+```json
+"allowScripts": {
+	"some-package": false,
+	"another-package@1.2.3": true
+}
 ```
+
+Do not use the `npm install-scripts` subcommands until the next npm release ships [npm/cli#9941](https://github.com/npm/cli/pull/9941). All of them read the hoisted layout, so under `install-strategy=linked` they misbehave: `ls` reports covered packages as uncovered, `prune` deletes every entry as unused, and `approve` and `deny` write unusable `node_modules/.store` paths instead of the package name.
