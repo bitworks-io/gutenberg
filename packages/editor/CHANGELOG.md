@@ -23,6 +23,7 @@
 -   Notes: Delete notes permanently when they can't be moved to the trash, instead of failing with an error ([#84102](https://github.com/WordPress/gutenberg/pull/84102)).
 -   Notes: Disable the note form field while a note or reply is being sent, instead of accepting text the save would not include ([#84083](https://github.com/WordPress/gutenberg/pull/84083)).
 -   Notes: Keep an unsent note or reply when selecting another block or thread, instead of discarding it ([#84110](https://github.com/WordPress/gutenberg/pull/84110)).
+-   Notes: Highlight the text an unsent note is about, and keep the note anchored to it when the selection changes or the text is edited before the note is sent ([#84125](https://github.com/WordPress/gutenberg/pull/84125)).
 
 ### Internal
 
