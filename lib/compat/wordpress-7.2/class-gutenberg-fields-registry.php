@@ -16,12 +16,12 @@
  * validate the definitions before storing them: a field that cannot be
  * stored is reported and skipped, and the rest of the call is stored.
  *
- * Fields are registered on the `fields_api_init` action, on the
+ * Fields are registered on the `wp_fields_api_init` action, on the
  * registry its callbacks receive, and only there: register(), update(),
  * and unregister() refuse to run while the action is not firing.
  *
  * The registry is filled lazily: the first time its fields are read, it
- * fires the `fields_api_init` action, on which the default fields of every
+ * fires the `wp_fields_api_init` action, on which the default fields of every
  * post type and the fields of plugins are registered. A read before `init`
  * has completed is refused, see initialize().
  *
@@ -55,7 +55,7 @@ final class Gutenberg_Fields_Registry {
 	private $field_modules = array();
 
 	/**
-	 * Whether the `fields_api_init` action has fired since the registry
+	 * Whether the `wp_fields_api_init` action has fired since the registry
 	 * was created.
 	 *
 	 * @var bool
@@ -108,7 +108,7 @@ final class Gutenberg_Fields_Registry {
 	 *                                   the JavaScript parts of the fields, if any.
 	 * @return string[] The ids of the fields registered, in the order of the
 	 *                  call. Empty when none is, when called outside the
-	 *                  `fields_api_init` action, or when an argument is
+	 *                  `wp_fields_api_init` action, or when an argument is
 	 *                  invalid.
 	 */
 	public function register( $origin, $kind, $name, $fields, $script_module = null ) {
@@ -200,7 +200,7 @@ final class Gutenberg_Fields_Registry {
 	 * of each field, once; the rest of the `origin` property cannot be
 	 * updated, and any `origin` the definition sets is ignored.
 	 *
-	 * Like register(), it only runs on the `fields_api_init` action.
+	 * Like register(), it only runs on the `wp_fields_api_init` action.
 	 *
 	 * @param string      $origin        Who updates the fields: `core`, or
 	 *                                   the slug of the plugin or theme.
@@ -212,7 +212,7 @@ final class Gutenberg_Fields_Registry {
 	 *                                   the JavaScript parts of the fields, if any.
 	 * @return string[] The ids of the fields updated, in the order of the
 	 *                  call. Empty when none is, when called outside the
-	 *                  `fields_api_init` action, or when an argument is
+	 *                  `wp_fields_api_init` action, or when an argument is
 	 *                  invalid.
 	 */
 	public function update( $origin, $kind, $name, $fields, $script_module = null ) {
@@ -275,7 +275,7 @@ final class Gutenberg_Fields_Registry {
 	 * no field is forgotten). Unregistering every field forgets the entity:
 	 * its registered fields and script modules.
 	 *
-	 * Like register(), it only runs on the `fields_api_init` action, and an
+	 * Like register(), it only runs on the `wp_fields_api_init` action, and an
 	 * invalid entity is reported and unregisters nothing.
 	 *
 	 * @param string        $kind The entity kind (e.g. `postType`).
@@ -285,7 +285,7 @@ final class Gutenberg_Fields_Registry {
 	 * @return array[] The list of the definitions unregistered, in
 	 *                 registration order, as get_registered() returns them.
 	 *                 Empty when none of the fields is registered, when
-	 *                 called outside the `fields_api_init` action, or when
+	 *                 called outside the `wp_fields_api_init` action, or when
 	 *                 the entity is invalid.
 	 */
 	public function unregister( $kind, $name, $ids = null ) {
@@ -388,7 +388,7 @@ final class Gutenberg_Fields_Registry {
 	}
 
 	/**
-	 * Fires the `fields_api_init` action the first time the registry
+	 * Fires the `wp_fields_api_init` action the first time the registry
 	 * is read.
 	 *
 	 * The read is refused until `init` has completed. The registry holds the
@@ -410,7 +410,7 @@ final class Gutenberg_Fields_Registry {
 		if ( ! did_action( 'init' ) || doing_action( 'init' ) ) {
 			_doing_it_wrong(
 				__METHOD__,
-				__( 'The registered fields cannot be read until the `init` action has completed: the post types and supports they derive from are registered on `init`. Read them once `init` has completed, or hook `fields_api_init`.', 'gutenberg' ),
+				__( 'The registered fields cannot be read until the `init` action has completed: the post types and supports they derive from are registered on `init`. Read them once `init` has completed, or hook `wp_fields_api_init`.', 'gutenberg' ),
 				'7.2.0'
 			);
 			return;
@@ -436,11 +436,11 @@ final class Gutenberg_Fields_Registry {
 		 *
 		 * @param Gutenberg_Fields_Registry $registry The registry being read.
 		 */
-		do_action( 'fields_api_init', $this );
+		do_action( 'wp_fields_api_init', $this );
 	}
 
 	/**
-	 * Checks that the `fields_api_init` action is firing, as register(),
+	 * Checks that the `wp_fields_api_init` action is firing, as register(),
 	 * update(), and unregister() require.
 	 *
 	 * Outside the action a registration would either come before the
@@ -452,13 +452,13 @@ final class Gutenberg_Fields_Registry {
 	 * @return bool Whether the action is firing.
 	 */
 	private function doing_fields_api_init( $method ) {
-		if ( doing_action( 'fields_api_init' ) ) {
+		if ( doing_action( 'wp_fields_api_init' ) ) {
 			return true;
 		}
 
 		_doing_it_wrong(
 			$method,
-			__( 'Fields can only be registered, updated, and unregistered on the `fields_api_init` action, on the registry it passes.', 'gutenberg' ),
+			__( 'Fields can only be registered, updated, and unregistered on the `wp_fields_api_init` action, on the registry it passes.', 'gutenberg' ),
 			'7.2.0'
 		);
 		return false;
@@ -512,7 +512,7 @@ final class Gutenberg_Fields_Registry {
 	 * @param mixed  $name          The entity name.
 	 * @param mixed  $fields        The field definitions.
 	 * @param mixed  $script_module The script module id, if any.
-	 * @return bool Whether the call may proceed: the `fields_api_init` action
+	 * @return bool Whether the call may proceed: the `wp_fields_api_init` action
 	 *              is firing and the arguments are valid.
 	 */
 	private function validate_arguments( $method, $origin, $kind, $name, $fields, $script_module ) {
