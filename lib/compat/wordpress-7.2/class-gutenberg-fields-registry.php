@@ -89,10 +89,12 @@ final class Gutenberg_Fields_Registry {
 	 * reported and skipped, and so is every definition after the first of an
 	 * id that appears more than once in the call. The rest of the fields of
 	 * the call are registered: a field another plugin got to first does not
-	 * cost a plugin the others. To change a registered field, see update();
-	 * to replace it, unregister it first. The script module, if any, applies
-	 * to every field the call registers. A field whose `type` DataViews does
-	 * not provide is reported and registered anyway.
+	 * cost a plugin the others. A definition that is not an array with a
+	 * non-empty string `id` is reported and skipped the same way. To change
+	 * a registered field, see update(); to replace it, unregister it first.
+	 * The script module, if any, applies to every field the call registers.
+	 * A field whose `type` DataViews does not provide is reported and
+	 * registered anyway.
 	 *
 	 * The origin is stored as the `origin` property of each field, as
 	 * `registeredBy`, replacing any `origin` the definition sets.
@@ -111,6 +113,10 @@ final class Gutenberg_Fields_Registry {
 	 */
 	public function register( $origin, $kind, $name, $fields, $script_module = null ) {
 		if ( ! $this->validate_arguments( __METHOD__, $origin, $kind, $name, $fields, $script_module ) ) {
+			return array();
+		}
+		$fields = $this->skip_invalid_definitions( __METHOD__, $kind, $name, $fields );
+		if ( ! $fields ) {
 			return array();
 		}
 
@@ -183,7 +189,8 @@ final class Gutenberg_Fields_Registry {
 	 *
 	 * Each definition is merged into the registered field with its id,
 	 * property by property; the field keeps its position. The fields must be
-	 * registered: a field that is not is reported and skipped, and the rest
+	 * registered: a field that is not is reported and skipped, and so is a
+	 * definition that is not an array with a non-empty string `id`; the rest
 	 * of the fields of the call are updated. The script module, if any,
 	 * applies to every field the call updates, on top of the modules the
 	 * fields have. A field whose `type` DataViews does not provide is
@@ -210,6 +217,10 @@ final class Gutenberg_Fields_Registry {
 	 */
 	public function update( $origin, $kind, $name, $fields, $script_module = null ) {
 		if ( ! $this->validate_arguments( __METHOD__, $origin, $kind, $name, $fields, $script_module ) ) {
+			return array();
+		}
+		$fields = $this->skip_invalid_definitions( __METHOD__, $kind, $name, $fields );
+		if ( ! $fields ) {
 			return array();
 		}
 		$this->report_unknown_types( __METHOD__, $kind, $name, $fields );
@@ -536,17 +547,6 @@ final class Gutenberg_Fields_Registry {
 			return false;
 		}
 
-		foreach ( $fields as $field ) {
-			if ( ! is_array( $field ) || empty( $field['id'] ) || ! is_string( $field['id'] ) ) {
-				_doing_it_wrong(
-					$method,
-					__( 'Every field definition must be an array with a non-empty string `id`.', 'gutenberg' ),
-					'7.2.0'
-				);
-				return false;
-			}
-		}
-
 		if ( null !== $script_module && ( ! is_string( $script_module ) || '' === $script_module ) ) {
 			_doing_it_wrong(
 				$method,
@@ -557,6 +557,46 @@ final class Gutenberg_Fields_Registry {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Drops the definitions that are not an array with a non-empty string
+	 * `id`, reporting their positions in the call with _doing_it_wrong():
+	 * like a duplicated field, an invalid definition does not cost the call
+	 * its other fields.
+	 *
+	 * @param string  $method The calling method, for the notice.
+	 * @param string  $kind   The entity kind.
+	 * @param string  $name   The entity name.
+	 * @param array[] $fields The list of field definitions.
+	 * @return array[] The valid definitions, in the order of the call.
+	 */
+	private function skip_invalid_definitions( $method, $kind, $name, $fields ) {
+		$valid   = array();
+		$invalid = array();
+		foreach ( $fields as $position => $field ) {
+			if ( is_array( $field ) && ! empty( $field['id'] ) && is_string( $field['id'] ) ) {
+				$valid[] = $field;
+			} else {
+				$invalid[] = '#' . ( $position + 1 );
+			}
+		}
+
+		if ( $invalid ) {
+			_doing_it_wrong(
+				$method,
+				sprintf(
+					/* translators: 1: Entity kind, e.g. postType. 2: Entity name, e.g. page. 3: Comma-separated list of positions, e.g. #2, #4. */
+					__( 'Every field definition must be an array with a non-empty string `id`. These definitions of %1$s "%2$s" are skipped: %3$s. The rest of the fields of the call are stored.', 'gutenberg' ),
+					$kind,
+					$name,
+					implode( ', ', $invalid )
+				),
+				'7.2.0'
+			);
+		}
+
+		return $valid;
 	}
 
 	/**
