@@ -5,7 +5,7 @@
 ### Breaking Changes
 
 -   Components that compose Emotion style fragments with `cx()` should pass source-order-dependent fragments in a single `css()` call. Passing separate fragments can change override order after the following components stopped rendering styles through Emotion:
-    -   `CustomSelectControl` and `CustomSelectControlV2`
+    -   `CustomSelectControl` and `CustomSelectControlV2` ([#84131](https://github.com/WordPress/gutenberg/pull/84131))
     -   `CustomGradientPicker` ([#82576](https://github.com/WordPress/gutenberg/pull/82576))
     -   `Text` ([#82573](https://github.com/WordPress/gutenberg/pull/82573))
     -   `Card`, `CardBody`, `CardHeader`, `CardFooter`, `CardMedia`, `CardDivider` ([#82577](https://github.com/WordPress/gutenberg/pull/82577))
