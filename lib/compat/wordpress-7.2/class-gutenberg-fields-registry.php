@@ -275,7 +275,8 @@ final class Gutenberg_Fields_Registry {
 	 * no field is forgotten). Unregistering every field forgets the entity:
 	 * its registered fields and script modules.
 	 *
-	 * Like register(), it only runs on the `fields_api_init` action.
+	 * Like register(), it only runs on the `fields_api_init` action, and an
+	 * invalid entity is reported and unregisters nothing.
 	 *
 	 * @param string        $kind The entity kind (e.g. `postType`).
 	 * @param string        $name The entity name (e.g. `page`).
@@ -283,11 +284,12 @@ final class Gutenberg_Fields_Registry {
 	 *                            null, every field of the entity.
 	 * @return array[] The list of the definitions unregistered, in
 	 *                 registration order, as get_registered() returns them.
-	 *                 Empty when none of the fields is registered, or when
-	 *                 called outside the `fields_api_init` action.
+	 *                 Empty when none of the fields is registered, when
+	 *                 called outside the `fields_api_init` action, or when
+	 *                 the entity is invalid.
 	 */
 	public function unregister( $kind, $name, $ids = null ) {
-		if ( ! $this->doing_fields_api_init( __METHOD__ ) ) {
+		if ( ! $this->doing_fields_api_init( __METHOD__ ) || ! $this->validate_entity( __METHOD__, $kind, $name ) ) {
 			return array();
 		}
 
@@ -527,15 +529,8 @@ final class Gutenberg_Fields_Registry {
 			return false;
 		}
 
-		foreach ( array( $kind, $name ) as $argument ) {
-			if ( ! is_string( $argument ) || '' === $argument ) {
-				_doing_it_wrong(
-					$method,
-					__( 'The entity kind and the entity name must be non-empty strings.', 'gutenberg' ),
-					'7.2.0'
-				);
-				return false;
-			}
+		if ( ! $this->validate_entity( $method, $kind, $name ) ) {
+			return false;
 		}
 
 		if ( ! is_array( $fields ) || empty( $fields ) || ! array_is_list( $fields ) ) {
@@ -556,6 +551,29 @@ final class Gutenberg_Fields_Registry {
 			return false;
 		}
 
+		return true;
+	}
+
+	/**
+	 * Checks that the entity kind and name are non-empty strings, reporting
+	 * them with _doing_it_wrong() otherwise.
+	 *
+	 * @param string $method The calling method, for the notice.
+	 * @param mixed  $kind   The entity kind.
+	 * @param mixed  $name   The entity name.
+	 * @return bool Whether both are valid.
+	 */
+	private function validate_entity( $method, $kind, $name ) {
+		foreach ( array( $kind, $name ) as $argument ) {
+			if ( ! is_string( $argument ) || '' === $argument ) {
+				_doing_it_wrong(
+					$method,
+					__( 'The entity kind and the entity name must be non-empty strings.', 'gutenberg' ),
+					'7.2.0'
+				);
+				return false;
+			}
+		}
 		return true;
 	}
 
